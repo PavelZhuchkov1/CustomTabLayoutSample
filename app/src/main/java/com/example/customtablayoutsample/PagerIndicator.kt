@@ -32,6 +32,9 @@ class PagerIndicator @JvmOverloads constructor(
 
     private val cornerRadius = 12.dp
 
+    private val shadowRadius = 2.dp
+    private val shadowColor = Color.parseColor("#10000000")
+
     var onTextClick: (() -> Unit)? = null
     var onAudioClick: (() -> Unit)? = null
 
@@ -39,11 +42,14 @@ class PagerIndicator @JvmOverloads constructor(
         color = Color.WHITE
     }
 
+    private val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = shadowColor
+        setShadowLayer(shadowRadius, 0f, 2f, shadowColor)
+    }
+
     private val selectorRect = RectF()
     private val selectorPath = Path()
     private val textBound = Rect()
-
-    private val correction = 1.dp
 
     private var animatedValue: Float = 0f
 
@@ -81,7 +87,7 @@ class PagerIndicator @JvmOverloads constructor(
             paint.getTextBounds(text.toString(), 0, text.length, textBound)
             canvas.drawText(
                 text.toString(),
-                this.left + this.paddingStart + textBound.left - correction,
+                (this.left + this.paddingStart + textBound.left).toFloat(),
                 (this.top + baseline).toFloat(),
                 paint
             )
@@ -97,10 +103,13 @@ class PagerIndicator @JvmOverloads constructor(
         val shift = distance * animatedValue
         val left = textCaption.left + shift
         val right = left + selectorWidth
+
         selectorRect.left = left
         selectorRect.top = textCaption.top.toFloat()
         selectorRect.right = right
         selectorRect.bottom = textCaption.bottom.toFloat()
+
+        canvas.drawRoundRect(selectorRect, cornerRadius, cornerRadius, shadowPaint)
         canvas.drawRoundRect(selectorRect, cornerRadius, cornerRadius, selectorPaint)
 
         selectorPath.reset()
