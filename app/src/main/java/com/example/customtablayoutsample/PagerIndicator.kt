@@ -51,26 +51,42 @@ class PagerIndicator @JvmOverloads constructor(
     private val selectorPath = Path()
     private val textBound = Rect()
 
-    private var animatedValue: Float = 0f
+    var fractionListener: ((Float) -> Unit)? = null
 
-    var position: Float = 0f
+    enum class State { TEXT, AUDIO }
+
+    var state: State = State.TEXT
+        private set
+
+    var fraction: Float = 0f
         set(value) {
             if (field == value) {
                 return
             }
             field = value
-            when (field) {
-                0f -> indicatorAnimator.reverse()
-                1f -> indicatorAnimator.start()
+            fractionListener?.invoke(field)
+            state = if (field > 0.5) {
+                State.AUDIO
+            } else {
+                State.TEXT
             }
-
+            invalidate()
         }
+
+    fun setAudioState() {
+        if (state == State.AUDIO) return
+        indicatorAnimator.start()
+    }
+
+    fun setTextState() {
+        if (state == State.TEXT) return
+        indicatorAnimator.reverse()
+    }
 
     private val indicatorAnimator: ValueAnimator = ValueAnimator.ofFloat(0f, 1f)
         .apply {
             addUpdateListener { animation ->
-                this@PagerIndicator.animatedValue = animation.animatedValue as Float
-                invalidate()
+                fraction = animation.animatedValue as Float
             }
             duration = 100L
             interpolator = LinearInterpolator()
@@ -99,8 +115,8 @@ class PagerIndicator @JvmOverloads constructor(
 
         val distance = audioCaption.left - textCaption.left
         val widthDiff = textCaption.width - audioCaption.width
-        val selectorWidth = textCaption.width - widthDiff * animatedValue
-        val shift = distance * animatedValue
+        val selectorWidth = textCaption.width - widthDiff * fraction
+        val shift = distance * fraction
         val left = textCaption.left + shift
         val right = left + selectorWidth
 
