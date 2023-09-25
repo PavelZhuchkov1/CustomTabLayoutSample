@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tab_layout"
+        android:layout_width="160dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        app:tabIndicatorFullWidth="true"
+        android:background="@drawable/shape_rect_rounded_16dp"
+        android:backgroundTint="#11000000"
+        app:tabGravity="fill"
+        app:tabIndicator="@drawable/shape_rect_rounded_12dp_with_borders_2dp"
+        app:tabIndicatorHeight="20dp"
+        app:tabIndicatorColor="@color/material_dynamic_neutral30"
+        app:tabIndicatorAnimationMode="linear"
+        app:tabIndicatorGravity="stretch"
+        app:tabInlineLabel="true"
+        app:tabMode="fixed"
+        app:tabRippleColor="@null"
+        app:tabSelectedTextColor="@color/black"
+        app:tabTextColor="@color/black">
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="text" />
+
+        <com.google.android.material.tabs.TabItem
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="audio" />
+
+    </com.google.android.material.tabs.TabLayout>
+
+    <com.example.customtablayoutsample.PagerIndicator
+        android:id="@+id/pager_indicator"
+        android:layout_width="wrap_content"
+        android:background="@drawable/shape_rect_rounded_16dp"
+        android:backgroundTint="@color/material_dynamic_neutral90"
+        android:layout_height="wrap_content" />
+
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>
