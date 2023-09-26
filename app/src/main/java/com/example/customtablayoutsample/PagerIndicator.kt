@@ -86,22 +86,13 @@ class PagerIndicator @JvmOverloads constructor(
 
     fun setAudioState() {
         if (state == State.AUDIO) return
-        indicatorAnimator.start()
+        snapValueAnimator(0f, 1f).start()
     }
 
     fun setTextState() {
         if (state == State.TEXT) return
-        indicatorAnimator.reverse()
+        snapValueAnimator(1f, 0f).start()
     }
-
-    private val indicatorAnimator: ValueAnimator = ValueAnimator.ofFloat(0f, 1f)
-        .apply {
-            addUpdateListener { animation ->
-                fraction = animation.animatedValue as Float
-            }
-            duration = 100L
-            interpolator = LinearInterpolator()
-        }
 
     init {
         textCaption.setOnClickListener { onTextClick?.invoke() }
