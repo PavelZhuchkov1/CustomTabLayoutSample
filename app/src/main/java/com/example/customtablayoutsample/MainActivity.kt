@@ -4,12 +4,12 @@ import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentContainerView
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import kotlin.random.Random
@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
         private const val FRAGMENT_TWO_TAG = "Fragment2"
     }
 
+    private var currentOffset: Float = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +39,45 @@ class MainActivity : AppCompatActivity() {
                 positionOffset: Float,
                 positionOffsetPixels: Int
             ) {
-                pagerIndicator.fraction = position + positionOffset
+                if (!viewPagerCover.isFakeDragging) {
+                    pagerIndicator.fraction = position + positionOffset
+                }
             }
         })
 
-        pagerIndicator.onTextClick = { pagerIndicator.setTextState() }
-        pagerIndicator.onAudioClick = { pagerIndicator.setAudioState() }
+        pagerIndicator.onTextClick = {
+            if (!viewPagerCover.isFakeDragging) {
+                pagerIndicator.setTextState()
+                viewPagerCover.setCurrentItem(0, true)
+            }
+        }
+        pagerIndicator.onAudioClick = {
+            if (!viewPagerCover.isFakeDragging) {
+                pagerIndicator.setAudioState()
+                viewPagerCover.setCurrentItem(1, true)
+            }
+        }
+
+        pagerIndicator.fractionWithMotionEventListener = { fraction, event ->
+            // cover viewpager
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> {
+                    viewPagerCover.isUserInputEnabled = false
+                    viewPagerCover.beginFakeDrag()
+                }
+                MotionEvent.ACTION_MOVE -> {
+                    val offset = viewPagerCover.width * fraction
+                    val dragBy = offset - currentOffset
+                    viewPagerCover.fakeDragBy(-dragBy)
+                    currentOffset = offset
+                }
+                MotionEvent.ACTION_UP -> {
+                    viewPagerCover.endFakeDrag()
+                    viewPagerCover.isUserInputEnabled = true
+                    currentOffset = 0f
+                }
+            }
+        }
 
         pagerIndicator.fractionListener = { fraction ->
             fractionText.text = fraction.toString()

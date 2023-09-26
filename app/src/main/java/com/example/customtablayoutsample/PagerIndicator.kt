@@ -1,5 +1,7 @@
 package com.example.customtablayoutsample
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.content.Context
 import android.content.res.Resources
@@ -10,14 +12,13 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.LinearLayout
 import android.widget.TextView
 
-// source https://a.yandex-team.ru/arcadia/mobile/geo/maps/maps/android/search/src/main/java/ru/yandex/yandexmaps/search/internal/suggest/categoryandhistory/PagerIndicator.kt?rev=r12497574#L20
+// source https://nda.ya.ru/t/ecVS5WeH6kE2wd
 class PagerIndicator @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -55,7 +56,10 @@ class PagerIndicator @JvmOverloads constructor(
     private val selectorPath = Path()
     private val textBound = Rect()
 
+    var fractionWithMotionEventListener: ((fraction: Float, event: MotionEvent) -> Unit)? = null
     var fractionListener: ((Float) -> Unit)? = null
+
+    var isDragging: Boolean = false
 
     enum class State { TEXT, AUDIO }
 
@@ -65,6 +69,9 @@ class PagerIndicator @JvmOverloads constructor(
     var fraction: Float = 0f
         set(value) {
             if (field == value) {
+                return
+            }
+            if (value < 0f || value > 1f) {
                 return
             }
             field = value
@@ -102,26 +109,43 @@ class PagerIndicator @JvmOverloads constructor(
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-        if (ev.action == MotionEvent.ACTION_MOVE && selectorRect.contains(ev.x, ev.y) && lastTouch != null) {
+        if (ev.action == MotionEvent.ACTION_DOWN && selectorRect.contains(ev.x, ev.y)) {
+            isDragging = true
+        }
+
+        if (ev.action == MotionEvent.ACTION_MOVE && isDragging && lastTouch != null) {
             fraction += (ev.x - lastTouch!!) / (audioCaption.left - textCaption.left)
         }
+
         if (ev.action == MotionEvent.ACTION_UP && selectorRect.contains(ev.x, ev.y)) {
-            if (fraction < 0.5) {
-                snapValueAnimator(fraction, 0f).start()
-            } else {
-                snapValueAnimator(fraction, 1f).start()
-            }
+            val endValue = if (fraction < 0.5f) 0f else 1f
+            snapValueAnimator(fraction, endValue) { isDragging = false }.start()
         }
+
+        if (
+            (ev.action == MotionEvent.ACTION_MOVE ||
+                    ev.action == MotionEvent.ACTION_UP ||
+                    ev.action == MotionEvent.ACTION_DOWN) &&
+            isDragging
+        ) {
+            fractionWithMotionEventListener?.invoke(fraction, ev)
+        }
+
         lastTouch = ev.x
         return false
     }
 
-    private fun snapValueAnimator(start: Float, end: Float): ValueAnimator {
+    private fun snapValueAnimator(start: Float, end: Float, onAnimationEnded: (() -> Unit)? = null): ValueAnimator {
         return ValueAnimator.ofFloat(start, end)
             .apply {
                 addUpdateListener { animation ->
                     fraction = animation.animatedValue as Float
                 }
+                addListener(object : AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: Animator) {
+                        onAnimationEnded?.invoke()
+                    }
+                })
                 duration = 100L
                 interpolator = LinearInterpolator()
             }
