@@ -30,7 +30,6 @@ class MainActivity : AppCompatActivity() {
         val viewPagerCover = findViewById<ViewPager2>(R.id.view_pager_cover)
         val fractionText = findViewById<TextView>(R.id.fraction)
         val stateText = findViewById<TextView>(R.id.state)
-        val fragmentContainerView = findViewById<FragmentContainerView>(R.id.fragment_container)
 
         viewPagerCover.adapter = ViewPagerAdapter()
         viewPagerCover.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
@@ -42,8 +41,6 @@ class MainActivity : AppCompatActivity() {
                 pagerIndicator.fraction = position + positionOffset
             }
         })
-
-
 
         pagerIndicator.onTextClick = { pagerIndicator.setTextState() }
         pagerIndicator.onAudioClick = { pagerIndicator.setAudioState() }

@@ -10,6 +10,8 @@ import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import android.util.AttributeSet
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.animation.LinearInterpolator
 import android.widget.LinearLayout
@@ -34,6 +36,8 @@ class PagerIndicator @JvmOverloads constructor(
 
     private val shadowRadius = 2.dp
     private val shadowColor = Color.parseColor("#10000000")
+
+    private var lastTouch: Float? = null
 
     var onTextClick: (() -> Unit)? = null
     var onAudioClick: (() -> Unit)? = null
@@ -95,6 +99,32 @@ class PagerIndicator @JvmOverloads constructor(
     init {
         textCaption.setOnClickListener { onTextClick?.invoke() }
         audioCaption.setOnClickListener { onAudioClick?.invoke() }
+    }
+
+    override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        if (ev.action == MotionEvent.ACTION_MOVE && selectorRect.contains(ev.x, ev.y) && lastTouch != null) {
+            fraction += (ev.x - lastTouch!!) / (audioCaption.left - textCaption.left)
+        }
+        if (ev.action == MotionEvent.ACTION_UP && selectorRect.contains(ev.x, ev.y)) {
+            if (fraction < 0.5) {
+                snapValueAnimator(fraction, 0f).start()
+            } else {
+                snapValueAnimator(fraction, 1f).start()
+            }
+        }
+        lastTouch = ev.x
+        return false
+    }
+
+    private fun snapValueAnimator(start: Float, end: Float): ValueAnimator {
+        return ValueAnimator.ofFloat(start, end)
+            .apply {
+                addUpdateListener { animation ->
+                    fraction = animation.animatedValue as Float
+                }
+                duration = 100L
+                interpolator = LinearInterpolator()
+            }
     }
 
     override fun drawChild(canvas: Canvas, child: View?, drawingTime: Long): Boolean {
